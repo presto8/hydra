@@ -1,5 +1,7 @@
 # Safe
 
+<img src="assets/safe-icon.png" alt="Image of a safe" align="right" style="width: 128px;" /></a>
+
 Safe is a meta backup program that manages other backup programs to ensure data
 is backed up according to the LOCKSS philosophy: Lots of Copies Keeps Stuff
 Safe.
