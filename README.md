@@ -41,10 +41,38 @@ that everything is backed up independently.
 ## Philosophies
 
 - Use diversity of implementation. Don't rely on any single entity.
-  - For the program used to back up the data, use multiple different backup
+  - For the program used to backup the data, use multiple different backup
     programs.
   - For the providers used to store the data, use multiple different storage
     providers.
+
+- Trust but verify.
+  - Don't rely on built-in verification of a backup program. Independently
+    verify data redundancy.
+
+- Always use encryption.
+  - Configure underlying backup programs with encryption.
+  - Don't support backup programs that don't offer encryption.
+  - Store secrets in pass/gpg.
+
+- Store everything under revision control (git).
+
+
+## User interface
+
+- hydra init
+- hydra backup
+  - runs backup according to defined backup schedule
+  - if backup is up-to-date, it will exit quickly
+  - use --now flag to force a backup
+- hydra doctor
+  - runs a health check on the Hydra instance and reports any issues
+- hydra verify
+  - runs verify according to defined backup schedule
+- hydra mount
+- hydra restore
+- hydra find
+
 
 ## Tech Stack
 
