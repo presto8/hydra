@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+SOURCE_DIRS=(src tests)
+
+set -euo pipefail
+
+main() {
+    parse_args "$@"
+    check_venv
+    check_dependencies
+
+    cmd=(coverage run -m pytest --exitfirst --failed-first "${ARGS[@]}")
+
+    if [[ $LOOP -eq 1 ]]; then
+        find "${SOURCE_DIRS[@]}" -name "*.py" | entr "${cmd[@]}"
+    else
+        "${cmd[@]}"
+        check_flake8
+        check_mypy
+        coverage report
+        coverage html
+    fi
+}
+
+check_flake8() {
+    # These tests are run by github actions
+    # stop the build if there are Python syntax errors or undefined names
+    flake8 "${SOURCE_DIRS[@]}" --select=E9,F63,F7,F82 --show-source --statistics
+    # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+    flake8 "${SOURCE_DIRS[@]}" --exit-zero --max-complexity=10 --max-line-length=160 --statistics
+}
+
+check_mypy() {
+    mypy --install-types --non-interactive
+    mypy "${SOURCE_DIRS[@]}" ||:
+}
+
+parse_args() {
+    eval set -- $(getopt --options "" --longoptions loop -- "$@")
+
+    export LOOP=0
+
+    while [[ $# ]]; do
+        case "$1" in
+            --loop) LOOP=1; shift ;;
+            --) shift ; break ;;
+            *)  echo "error!" ; exit 1 ;;
+        esac
+    done
+
+    ARGS=("$@")
+}
+
+check_venv() {
+    local script_path
+    script_path=$(dirname "$(realpath -s "$0")")
+    if [[ ! -v VIRTUAL_ENV ]]; then
+        echo automatically activating virtualenv before running tests
+        source "$script_path/venv/bin/activate"
+    fi
+}
+
+check_dependencies() {
+    for module in pytest coverage; do
+        if ! python -m $module --version; then
+            pip install $module
+        fi
+    done
+}
+
+main "$@"
