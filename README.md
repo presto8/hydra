@@ -24,7 +24,10 @@ that everything is backed up independently.
 - Manages multiple backup destinations (dropbox, s3, ...)
 - Enables the highest available encryption level of the underlying backup
   program
-- Automatically verifies backup data on a schedule
+- Configures underlying backup programs with the most conservative
+  configuration settings, such as backing everything up by default.
+- Automatically verifies backup data on a schedule, by restoring the data and
+  verifying it.
 - Reports if backup is out of date or insufficient
 - All configuration and settings stored in git for revision control and
   disaster recovery
@@ -33,6 +36,7 @@ that everything is backed up independently.
 - Ability to backup essential information to paper copy
 - Easy migration in or out: backup data is managed by the underlying backup
   programs, so you are able to start or stop using hydra any time you want.
+- Full logging for easier audit and troubleshooting
 
 ## Philosophies
 
@@ -47,5 +51,6 @@ that everything is backed up independently.
 Hydra doesn't reinvent the wheel. It stands on the shoulders of giants:
 
 - Backup programs: restic, hashbackup, duplicacy, kopia, ...
-- File transfer (for backup to peers): syncthing
+- Storage of configuration settings: git
 - Storage of secrets: password-store (pass), gpg
+- File transfer (for backup to peers): syncthing, minio, ...
