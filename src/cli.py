@@ -3,6 +3,7 @@
 import argparse
 import inspect
 import os
+import signal
 import sys
 from pathlib import Path
 from src import work
@@ -81,11 +82,25 @@ class Fail(Exception):
     pass
 
 
+class SigtermInterrupt(Exception):
+    pass
+
+
+def register_sigterm():
+    def exit_gracefully(*args):
+        raise SigtermInterrupt()
+    signal.signal(signal.SIGINT, exit_gracefully)
+    signal.signal(signal.SIGTERM, exit_gracefully)
+
+
 def entrypoint():  # pragma: no cover
     try:
+        register_sigterm()
         main(sys.argv[1:])
     except Fail as f:
         print(*f.args, file=sys.stderr)
         sys.exit(1)
+    except SigtermInterrupt:
+        print("received interrrupt or terminate signal")
     except KeyboardInterrupt:
         print("Ctrl+C")
