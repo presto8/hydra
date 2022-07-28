@@ -22,12 +22,12 @@ that everything is backed up independently.
 - Runs backups on a user-defined schedule
 - Manages multiple backup programs (restic, hashbackup, ...)
 - Manages multiple backup destinations (dropbox, s3, ...)
-- Enables the highest available encryption level of the underlying backup
-  program
+- Enables the highest available encryption level
 - Configures underlying backup programs with the most conservative
   configuration settings, such as backing everything up by default.
 - Automatically verifies backup data on a schedule, by restoring the data and
-  verifying it.
+  verifying it. (Verification is independent of the backup program's
+  verification features, if any.)
 - Reports if backup is out of date or insufficient
 - All configuration and settings stored in git for revision control and
   disaster recovery
@@ -36,9 +36,23 @@ that everything is backed up independently.
 - Ability to backup essential information to paper copy
 - Easy migration in or out: backup data is managed by the underlying backup
   programs, so you are able to start or stop using hydra any time you want.
+- Automatic statistics collection on backup performance (time, bandwidth, ...)
 - Full logging for easier audit and troubleshooting
+- Single ignore file syntax
 
 ## Philosophies
+
+- Default settings that work out-of-the-box for 95% of users. Most settings can
+  be overridden if desired. Examples of defaults include:
+
+  - Run backups with lowest IO priority (using `ionice` on Linux)
+  - Check that disks are mounted before running backups
+
+- Extremely conservative approach: backup all data by default. Require users to
+  explicitly mark data as "don't back up" before excluding it.
+
+  For example, hydra will check that mountpoints are mounted before baking up.
+  And hydra will automatically cross mountpoints unless they are excluded.
 
 - Use diversity of implementation. Don't rely on any single entity.
   - For the program used to backup the data, use multiple different backup
@@ -72,6 +86,8 @@ that everything is backed up independently.
 - hydra mount
 - hydra restore
 - hydra find
+- hydra config
+  - launch configuration wizard
 
 
 ## Tech Stack
@@ -82,3 +98,15 @@ Hydra doesn't reinvent the wheel. It stands on the shoulders of giants:
 - Storage of configuration settings: git
 - Storage of secrets: password-store (pass), gpg
 - File transfer (for backup to peers): syncthing, minio, ...
+
+
+## For further reading
+
+- [Backblaze Durability and Why It Doesn't Matter](https://www.backblaze.com/blog/cloud-storage-durability/)
+
+This article talks about how cloud services achieve 11 nines of storage
+reliability. It then says this doesn't matter because you are far more likely
+to lose access to your data via some mundane event, like a billing issue.
+
+In the context of Hydra, the take away is that you should never rely on a
+single storage provider with your data.
