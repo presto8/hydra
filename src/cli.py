@@ -19,7 +19,7 @@ data is backed up safely to multiple destinations.
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(description=HELP, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--hydradir', default=os.environ.get('HYDRA_DIR'), help='location of Hydra config files')
+    parser.add_argument('--configdir', default=os.environ.get('HYDRA_DIR'), help='location of Hydra config files (default: $HYDRA_DIR, $XDG_CONFIG_HOME/hydra, ~/.config/hydra)')
     parser.add_argument('--verbose', default=False, action='store_true', help='show more detailed messages')
     parser.add_argument('--debug', action='store_true')
 
@@ -30,8 +30,7 @@ def parse_args(argv):
         commands.append(name)
         return subparsers.add_parser(name, *args, **kwargs)
 
-    x = add_command('backup', help='backup pathspec (recursively descend dirs)')
-    x.add_argument('pathspec', nargs='+', default=('.',), help="paths to process")
+    x = add_command('backup', help='run backup jobs')
     x.add_argument('--dry-run', '-n', action='store_true', help='do not backup, preview what would happen only')
     x.add_argument('--daily', action='store_true', help='')
 
@@ -74,7 +73,7 @@ def cli_mapper(args):
 
 def main(argv):
     args = parse_args(argv)
-    args.work = work.Work(configdir=args.hydradir)
+    args.work = work.Work(configdir=args.configdir)
     cli_mapper(args)
 
 
