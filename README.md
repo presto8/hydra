@@ -31,13 +31,14 @@ that everything is backed up independently.
 - Reports if backup is out of date or insufficient
 - All configuration and settings stored in git for revision control and
   disaster recovery
-- Ability to create a USB recovery drive with everything needed to do a "cold
-  restore"
+- Automatically creates recovery files with everything needed to do a "cold restore"
 - Ability to backup essential information to paper copy
 - Easy migration in or out: backup data is managed by the underlying backup
   programs, so you are able to start or stop using hydra any time you want.
 - Automatic statistics collection on backup performance (time, bandwidth, ...)
-- Full logging for easier audit and troubleshooting
+- Full logging for easier audit and troubleshooting (automatically encrypted and compressed)
+- Tracks bandwidth use with configurations for saving bandwidth
+- Tracks network activity of backup programs, e.g., to detect viruses or malware
 - Single ignore file syntax
 
 ## Philosophies
@@ -47,12 +48,10 @@ that everything is backed up independently.
 
   - Run backups with lowest IO priority (using `ionice` on Linux)
   - Check that disks are mounted before running backups
+  - Automatically cross mountpoints unless excluded (with a warning)
 
 - Extremely conservative approach: backup all data by default. Require users to
   explicitly mark data as "don't back up" before excluding it.
-
-  For example, hydra will check that mountpoints are mounted before baking up.
-  And hydra will automatically cross mountpoints unless they are excluded.
 
 - Use diversity of implementation. Don't rely on any single entity.
   - For the program used to backup the data, use multiple different backup
@@ -67,7 +66,7 @@ that everything is backed up independently.
 - Always use encryption.
   - Configure underlying backup programs with encryption.
   - Don't support backup programs that don't offer encryption.
-  - Store secrets in pass/gpg.
+  - Store secrets with gpg.
 
 - Store everything under revision control (git).
 
