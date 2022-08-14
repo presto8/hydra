@@ -87,14 +87,6 @@ jobs:
 """
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('jobfiles', nargs='*', default=(), help="jobfiles to run")
-    parser.add_argument('--quiet', default=False, action='store_true', help="don't display informational messages")
-    parser.add_argument('--test', default=False, action='store_true', help="use test jobs")
-    return parser.parse_args()
-
-
 def main():
     fail_if_already_running()
 
@@ -155,17 +147,3 @@ def register_sigterm():
         raise SigtermInterrupt()
     signal.signal(signal.SIGINT, exit_gracefully)
     signal.signal(signal.SIGTERM, exit_gracefully)
-
-
-if __name__ == '__main__':
-    try:
-        ARGS = parse_args()
-        register_sigterm()
-        main()
-    except Fail as f:
-        print(*f.args, file=sys.stderr)
-        sys.exit(1)
-    except SigtermInterrupt:
-        info("received interrrupt signal")
-    except KeyboardInterrupt:
-        print("Ctrl+C")
