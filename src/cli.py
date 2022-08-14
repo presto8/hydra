@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse
 import inspect
 import os
@@ -34,11 +32,29 @@ def parse_args(argv):
     x.add_argument('--dry-run', '-n', action='store_true', help='do not backup, preview what would happen only')
     x.add_argument('--daily', action='store_true', help='')
 
-    # 'store init'
+    # 'hydra init'
     x = add_command('init', help='initialize a Hydra instance')
 
-    # 'store info'
+    # 'hydra backup'
+    x = add_command('backup', help='run all backup jobs')
+
+    # 'hydra verify'
+    x = add_command('verify', help='verify backups')
+
+    # 'hydra restore'
+    x = add_command('restore', help='restore from backups')
+
+    # 'hydra find'
+    x = add_command('find', help='find files in backups')
+
+    # 'hydra status'
+    x = add_command('status', help='display backup status')
+
+    # 'hydra info'
     x = add_command('info', help='show information and statistics for a Hydra instance')
+
+    # 'hydra doctor'
+    x = add_command('doctor', help='diagnose issues')
 
     # check for default command
     if argv and argv[0] not in commands:
