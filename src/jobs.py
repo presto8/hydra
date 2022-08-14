@@ -1,5 +1,6 @@
 import os
 import subprocess
+import tempfile
 import threading
 import time
 from contextlib import contextmanager
@@ -159,7 +160,7 @@ class JobGroup:
                 print(self.format_results(), file=f)
 
 
-def run_shell(*args, echo=False, outputf=subprocess.STDOUT, cwd=None) -> RunResult:
+def run_shell(*args, echo=False, outputf=subprocess.STDOUT, cwd=None, extra_env=None) -> RunResult:
     """Run command. Never raises an exception. Returns -1 exit_code on
     FileNotFound, else returns stdout and stderr combined together as output
     and sets exitcode."""
@@ -172,10 +173,18 @@ def run_shell(*args, echo=False, outputf=subprocess.STDOUT, cwd=None) -> RunResu
     result['cwd'] = cwd
     result['start_time'] = datetime.now()
 
+    env = extra_env
+    if env is not None:
+        env = os.environ.copy()
+        env.update(extra_env)
+        extra_env = env
+
     try:
-        proc = subprocess.Popen(result['command'], stdout=outputf, stderr=subprocess.STDOUT, universal_newlines=True, cwd=cwd)
-        proc.wait()
-        result['exit_code'] = proc.returncode
+        with tempfile.TemporaryDirectory(dir='/var/tmp') as tempd:
+            env['TMPDIR'] = tempd
+            proc = subprocess.Popen(result['command'], stdout=outputf, stderr=subprocess.STDOUT, universal_newlines=True, cwd=cwd, env=env)
+            proc.wait()
+            result['exit_code'] = proc.returncode
     except (FileNotFoundError, OSError) as e:
         result['exit_code'] = -1
         log(str(e))
