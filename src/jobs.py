@@ -26,6 +26,7 @@ class Job:
     name: str
     cwd: str
     command: list[str]
+    env: Optional[dict] = None
     result: Optional[RunResult] = None
     logpath: Optional[str] = None
     after: Optional[str] = None
@@ -35,13 +36,14 @@ class Job:
         logpath = f" log={self.logpath}" if self.logpath else ""
         result = f" {self.result}" if self.result else ""
         after = f' after={self.after}' if self.after else ""
-        return f'Job("{self.name}"{after}{result}{logpath} cmd={self.command} cwd={self.cwd})'
+        env = f' env={self.env}' if self.env else ""
+        return f'Job("{self.name}"{after}{result}{logpath}{env} cmd={self.command} cwd={self.cwd})'
 
     def run(self, logf) -> None:
         self.logpath = logf.name
         cmd = ["timeout", str(self.max_time.total_seconds())] if self.max_time else []
         cmd += self.command
-        self.result = run_shell(*cmd, outputf=logf, cwd=self.cwd)
+        self.result = run_shell(*cmd, outputf=logf, cwd=self.cwd, extra_env=self.env)
 
 
 @dataclass

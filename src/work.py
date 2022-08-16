@@ -2,6 +2,7 @@ import os
 import yaml
 from pathlib import PurePath
 from src import utils
+from src import hydra
 
 
 class Work:
@@ -27,9 +28,8 @@ class Work:
 
 
 def backup(work):
-    # load config file
-    print("TODO: backup")
-    print(work.config)
+    jg = hydra.config_to_jobgroup(work.config)
+    print(jg)
 
 
 def doctor(work):

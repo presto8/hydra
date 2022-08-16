@@ -1,56 +1,9 @@
 import fcntl
 import os
 import signal
+import time
 import yaml
-from . import jobs
-
-
-def yaml_to_jobgroup(yamlstr: str) -> jobs.JobGroup:
-    y = yaml.safe_load(yamlstr)
-
-    jobgroup_name = y['jobgroup']['name']
-    jobs = []
-
-    for name, info in y['jobs'].items():
-        required_fields = "cwd cmd".split()
-        missing = [x for x in required_fields if x not in info]
-        if missing:
-            raise Fail(f"required fields not present: {missing}")
-
-        if isinstance(info['cmd'], str):
-            info['cmd'] = info['cmd'].split()
-
-        after = info.get('after', None)
-        if isinstance(after, str):
-            after = after.split()
-        max_time = info.get('max_time', None)
-
-        job = jobs.Job(name=name, cwd=info['cwd'], command=info['cmd'], after=after, max_time=max_time)
-        jobs.append(job)
-
-    if not jobgroup_name:
-        raise Fail("required configuration for [jobgroup] not found")
-
-    return jobs.JobGroup(name=jobgroup_name, jobs=jobs)
-
-
-def main():
-    fail_if_already_running()
-
-    jobgroups = []
-    for path in ARGS.jobfiles:
-        with open(path, "r") as f:
-            jobgroup = yaml_to_jobgroup(f.read())
-            jobgroups.append(jobgroup)
-
-    failed_jobs = 0
-    for jobgroup in jobgroups:
-        jobgroup.run()
-        failed_jobs += jobgroup.failed_jobs
-        print_results(jobgroup)
-
-    if failed_jobs > 0:
-        raise Fail()
+from .jobs import Job, JobGroup
 
 
 def print_results(jobgroup):
@@ -88,3 +41,66 @@ def register_sigterm():
         raise SigtermInterrupt()
     signal.signal(signal.SIGINT, exit_gracefully)
     signal.signal(signal.SIGTERM, exit_gracefully)
+
+
+def config_to_jobgroup(y) -> JobGroup:
+    jobgroup_name = y['hydra']['name']
+    jobs = []
+
+    backups = []
+    for name, backup in y['backups'].items():
+        backup['name'] = name
+        storage = y['storages'][backup['storage']]
+        backup['storage'] = storage
+        backup['env'] = configure_backup_runtime(backup)
+        print(backup)
+        backups.append(backup)
+
+    for phase in "backup verify maintain".split():
+        for backup in backups:
+            cmd = y['methods'][backup['method']][phase]
+            cmd = cmd.split()
+            try:
+                path_idx = cmd.index('{}')
+                cmd = cmd[:path_idx] + y['files']['paths'] + cmd[path_idx + 1:]
+            except ValueError:
+                pass
+            job = Job(name=f"{name}-{phase}", cwd="/tmp", command=cmd, env=backup['env'])
+            jobs.append(job)
+
+    for j in jobs:
+        print(j)
+
+    return JobGroup(name=jobgroup_name, jobs=jobs)
+
+
+def configure_backup_runtime(backup):
+    storage = backup['storage']
+    if backup['method'] == 'restic':
+        name = get_ephemeral_name()
+        env = configure_storage_runtime(name, storage)
+        env.update(configure_restic_runtime(name, backup))
+        return env
+
+    raise Fail('unsupported', backup['method'])
+
+
+def get_ephemeral_name():
+    time_ms = int(time.time() * 1000)
+    return f"HYDRA{time_ms}"
+
+
+def configure_storage_runtime(name, storage):
+    env = {}
+    if 'rclone' in storage:
+        r = storage['rclone']
+        env[f"RCLONE_CONFIG_{name}_TYPE"] = r['type']
+        env[f"RCLONE_CONFIG_{name}_TOKEN"] = r['token']
+    return env
+
+
+def configure_restic_runtime(name, backup):
+    env = {}
+    env["RESTIC_REPOSITORY"] = f"rclone:{name}:{backup['storage_path']}"
+    env["RESTIC_PASSWORD"] = backup['password']
+    return env
