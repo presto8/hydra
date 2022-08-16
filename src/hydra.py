@@ -34,64 +34,14 @@ def yaml_to_jobgroup(yamlstr: str) -> jobs.JobGroup:
     return jobs.JobGroup(name=jobgroup_name, jobs=jobs)
 
 
-def create_test_jobs_yaml():
-    return """
-# Config file uses YAML syntax. cwd and cmd must be specified. cmd is split on
-# whitespace; use list syntax [] to include spaces in arguments.
-
-jobgroup: test
-
-jobs:
-  missing:
-    cwd: /tmp
-    cmd: asdfasdfadsf
-  notexec:
-    cwd: /tmp
-    cmd: /etc/motd
-  echo:
-    cwd: /tmp
-    cmd: echo hi
-  "true":
-    cwd: /tmp
-    cmd: "true"
-  "false":
-    cwd: /tmp
-    cmd: "false"
-    after: "true"
-  sleep20:
-    cwd: /tmp
-    cmd: sleep 20
-    after:
-  sleep 3:
-    cwd: /tmp
-    cmd: sleep 3
-    after:
-  timeout:
-    cwd: /tmp
-    cmd: sleep 100
-    after:
-    maxtime: 5
-  final:
-    cwd: /tmp
-    cmd: ["echo", "all done"]
-    after: [sleep20, "sleep 3"]
-"""
-
-
 def main():
     fail_if_already_running()
 
-    if ARGS.test:
-        yamlstr = create_test_jobs_yaml()
-        test_job_group = yaml_to_jobgroup(yamlstr)
-
-        jobgroups = [test_job_group]
-    else:
-        jobgroups = []
-        for path in ARGS.jobfiles:
-            with open(path, "r") as f:
-                jobgroup = yaml_to_jobgroup(f.read())
-                jobgroups.append(jobgroup)
+    jobgroups = []
+    for path in ARGS.jobfiles:
+        with open(path, "r") as f:
+            jobgroup = yaml_to_jobgroup(f.read())
+            jobgroups.append(jobgroup)
 
     failed_jobs = 0
     for jobgroup in jobgroups:
