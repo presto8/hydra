@@ -37,6 +37,7 @@ def parse_args(argv):
 
     # 'hydra backup'
     x = add_command('backup', help='run all backup jobs')
+    x.add_argument('--force', action='store_true', help='always run backup even if ahead of schedule')
 
     # 'hydra verify'
     x = add_command('verify', help='verify backups')
