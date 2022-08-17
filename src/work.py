@@ -44,5 +44,9 @@ def info(work):
     print("TODO: info")
 
 
+def status(work):
+    print("TODO: status")
+
+
 def verify(work):
-    print("TODO: backup")
+    print("TODO: verify")
