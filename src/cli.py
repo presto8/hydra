@@ -19,7 +19,8 @@ def parse_args(argv):
     parser = argparse.ArgumentParser(description=HELP, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--configdir', default=os.environ.get('HYDRA_DIR'), help='location of Hydra config files (default: $HYDRA_DIR, $XDG_CONFIG_HOME/hydra, ~/.config/hydra)')
     parser.add_argument('--verbose', default=False, action='store_true', help='show more detailed messages')
-    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--debug', action='store_true', help='print as much information as possible')
+    parser.add_argument('--quiet', action='store_true', help='print as little output as possible, only error messages')
 
     commands = []
     subparsers = parser.add_subparsers(dest='command')
