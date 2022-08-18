@@ -65,11 +65,13 @@ class JobGroup:
         if not self.quiet:
             print(*args)
 
-    def run(self):
+    def run(self, logdir=None):
         self.build_dependencies()
         self.start_time = datetime.now()
 
         finaldir = datetime.now().strftime("%Y-%m-%d_%H.%M.%S_") + self.name
+        if logdir:
+            finaldir = os.path.join(logdir, finaldir)
         with in_progress_dir(finaldir) as tempdir:
             self.backupdir = tempdir
             result = self.run_jobs()
