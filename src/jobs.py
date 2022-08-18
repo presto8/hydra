@@ -56,9 +56,14 @@ class JobGroup:
     started_jobs: int = 0
     finished_jobs: int = 0
     failed_jobs: Optional[int] = None
+    quiet: bool = False
 
     def __post_init__(self):
         self.mutex = threading.Lock()
+
+    def info(self, *args):
+        if not self.quiet:
+            print(*args)
 
     def run(self):
         self.build_dependencies()
@@ -113,12 +118,12 @@ class JobGroup:
                 next_notify = min(next_notify + 30, 900)  # min freq is 15 min = 900 sec
                 time.sleep(1)
             infolog(f"starting job {jobnum}: {job}")
-            info(f"{jobnum}: {job}")
+            self.info(f"{jobnum}: {job}")
             job.run(tlogf)
             infolog(f"finished job {jobnum}: {job}")
-        info(f"{jobnum}: {job.result}")
+        self.info(f"{jobnum}: {job.result}")
         if job.max_time and job.result == 124:
-            info(f":: timeout triggered because job exceeded max time of {job.max_time}")
+            self.info(f":: timeout triggered because job exceeded max time of {job.max_time}")
         self.write_summary()
 
     def get_job(self, name: str) -> Optional[Job]:
